@@ -1,17 +1,27 @@
 import React from "react";
-import {
-    View,
-    StatusBar,
-    Image,
-    Text,
-    StyleSheet,
-    TouchableOpacity,
-} from "react-native";
+import { View, StatusBar, Image, Text, StyleSheet } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import Colors from "../../constants/Colors";
 import Button from "@/components/Buttons";
+import { useNavigation } from "@react-navigation/native";
+import { StackNavigationProp } from "@react-navigation/stack";
+
+// Define the available screens in the navigation stack
+type RootStackParamList = {
+    Welcome: undefined;
+    Login: undefined;
+    Register: undefined;
+};
+
+// Define the navigation prop type
+type WelcomeScreenNavigationProp = StackNavigationProp<
+    RootStackParamList,
+    "Welcome"
+>;
 
 const WelcomeScreen = () => {
+    const navigation = useNavigation<WelcomeScreenNavigationProp>();
+
     return (
         <View style={styles.container}>
             <StatusBar
@@ -54,12 +64,12 @@ const WelcomeScreen = () => {
                 <View style={styles.buttonContainer}>
                     <Button
                         title="Login"
-                        onPress={() => console.log("Login Pressed")}
+                        onPress={() => navigation.navigate("Login")}
                         type="primary"
                     />
                     <Button
                         title="Register"
-                        onPress={() => console.log("Register Pressed")}
+                        onPress={() => navigation.navigate("Register")}
                         type="secondary"
                     />
                 </View>
