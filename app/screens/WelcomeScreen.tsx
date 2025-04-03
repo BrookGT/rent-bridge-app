@@ -1,23 +1,31 @@
 import React from "react";
-import { View, StatusBar, Image, Text, StyleSheet } from "react-native";
+import {
+    View,
+    StatusBar,
+    Image,
+    Text,
+    StyleSheet,
+    Dimensions,
+} from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import Colors from "../../constants/Colors";
 import Button from "@/components/Buttons";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 
-// Define the available screens in the navigation stack
+// Define navigation types
 type RootStackParamList = {
     Welcome: undefined;
     Login: undefined;
     Register: undefined;
 };
 
-// Define the navigation prop type
 type WelcomeScreenNavigationProp = StackNavigationProp<
     RootStackParamList,
     "Welcome"
 >;
+
+const { width, height } = Dimensions.get("window"); // Get screen dimensions
 
 const WelcomeScreen = () => {
     const navigation = useNavigation<WelcomeScreenNavigationProp>();
@@ -56,7 +64,7 @@ const WelcomeScreen = () => {
                     <Image
                         source={require("../../assets/images/pngwing.com (21).png")}
                         style={styles.featureImage}
-                        resizeMode="cover"
+                        resizeMode="contain"
                     />
                 </View>
 
@@ -112,21 +120,21 @@ const styles = StyleSheet.create({
         textAlign: "center",
     },
     imageContainer: {
-        flex: 1,
+        flex: 1, // Allows it to grow but not take over completely
+        width: "100%",
+        alignItems: "center",
         justifyContent: "center",
-        width: "90%",
-        height: 200,
-        borderRadius: 20,
-        marginVertical: 20,
+        maxHeight: height * 0.4, // Limits the height so buttons always have space
     },
     featureImage: {
         width: "100%",
         height: "100%",
-        resizeMode: "contain",
     },
     buttonContainer: {
-        width: "100%",
-        alignItems: "center",
+        width: "90%", // Ensures the buttons take up 90% of the screen width
+        alignSelf: "center", // Centers the container horizontally
+        marginBottom: 30, // Keeps the buttons near the bottom
+        alignItems: "center", // Centers the buttons inside the container horizontally
     },
 });
 

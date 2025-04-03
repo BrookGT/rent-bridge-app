@@ -1,28 +1,23 @@
 import React from "react";
-import { NavigationContainer } from "@react-navigation/native";
-import { createStackNavigator } from "@react-navigation/stack"; // Import the Stack Navigator
+import { createStackNavigator } from "@react-navigation/stack";
 import WelcomeScreen from "./screens/WelcomeScreen";
 import LoginScreen from "./screens/LoginScreen";
+import HomeScreen from "./screens/HomeScreen";
 
-// Define the parameter list for your stack navigator
 type RootStackParamList = {
     Welcome: undefined;
     Login: undefined;
     Home: undefined;
 };
 
-// Create a Stack Navigator
 const Stack = createStackNavigator<RootStackParamList>();
 
-const App = () => {
+export default function AppNavigator() {
     return (
-        <NavigationContainer>
-            <Stack.Navigator initialRouteName="Welcome">
-                <Stack.Screen name="Welcome" component={WelcomeScreen} />
-                <Stack.Screen name="Login" component={LoginScreen} />
-            </Stack.Navigator>
-        </NavigationContainer>
+        <Stack.Navigator initialRouteName="Welcome">
+            <Stack.Screen name="Welcome" component={WelcomeScreen} />
+            <Stack.Screen name="Login" component={LoginScreen} />
+            <Stack.Screen name="Home" component={HomeScreen} />
+        </Stack.Navigator>
     );
-};
-
-export default App;
+}
