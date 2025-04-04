@@ -16,11 +16,9 @@
             }
         },
         "web": {
-            "bundler": "metro",
-            "output": "static"
+            "bundler": "metro"
         },
         "plugins": [
-            "expo-router",
             [
                 "expo-splash-screen",
                 {
@@ -29,9 +27,6 @@
                     "backgroundColor": "#ffffff"
                 }
             ]
-        ],
-        "experiments": {
-            "typedRoutes": true
-        }
+        ]
     }
 }

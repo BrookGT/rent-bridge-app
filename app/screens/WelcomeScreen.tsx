@@ -8,7 +8,7 @@ import {
     Dimensions,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import Colors from "../../constants/Colors";
+import Colors from "../../components/constants/Colors";
 import Button from "@/components/Buttons";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";

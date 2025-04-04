@@ -8,7 +8,7 @@ import {
     StyleSheet,
     StatusBar,
 } from "react-native";
-import Colors from "../../constants/Colors";
+import Colors from "../../components/constants/Colors";
 import { StackNavigationProp } from "@react-navigation/stack"; // Import StackNavigationProp
 
 // Define the parameter list for your stack navigation
