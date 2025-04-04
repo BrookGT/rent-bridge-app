@@ -9,9 +9,11 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import Colors from "../../components/constants/Colors";
-import Button from "@/components/Buttons";
+import Button from "@/components/Buttons/Buttons";
 import { useNavigation } from "@react-navigation/native";
+import LottieView from "lottie-react-native";
 import { StackNavigationProp } from "@react-navigation/stack";
+import BackButton from "@/components/Buttons/BackButton";
 
 // Define navigation types
 type RootStackParamList = {
@@ -43,16 +45,18 @@ const WelcomeScreen = () => {
                 colors={[Colors.primary, Colors.black]}
                 style={styles.background}
             >
+                {/* Add the BackButton component */}
+                <BackButton />
+
                 <View style={styles.content}>
                     {/* Logo & Title */}
-                    <View style={styles.logoContainer}>
-                        <Image
-                            source={require("../../assets/images/imagelogo.png")}
-                            style={styles.logo}
-                            resizeMode="contain"
-                        />
-                        <Text style={styles.rentText}>RENTING</Text>
-                    </View>
+                    <LottieView
+                        source={require("../../assets/animations/animation_3.json")}
+                        autoPlay
+                        loop
+                        style={styles.logo}
+                    />
+
                     <Text style={styles.welcomeText}>
                         Welcome to RENT-BRIDGE
                         {"\n"}Find your dream home with us!
@@ -104,8 +108,8 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
     logo: {
-        width: 120,
-        height: 120,
+        width: 300,
+        height: 100,
     },
     rentText: {
         fontSize: 32,
@@ -120,21 +124,20 @@ const styles = StyleSheet.create({
         textAlign: "center",
     },
     imageContainer: {
-        flex: 1, // Allows it to grow but not take over completely
+        flex: 1,
         width: "100%",
         alignItems: "center",
         justifyContent: "center",
-        maxHeight: height * 0.4, // Limits the height so buttons always have space
     },
     featureImage: {
         width: "100%",
         height: "100%",
     },
     buttonContainer: {
-        width: "90%", // Ensures the buttons take up 90% of the screen width
-        alignSelf: "center", // Centers the container horizontally
-        marginBottom: 30, // Keeps the buttons near the bottom
-        alignItems: "center", // Centers the buttons inside the container horizontally
+        width: "90%",
+        alignSelf: "center",
+        marginBottom: 30,
+        alignItems: "center",
     },
 });
 

@@ -1,6 +1,6 @@
 const Colors = {
     primary: "#00796B", // Teal
-    secondary: "#FFC107", // Darker Goldenrod
+    secondary: "#FFC107", //Goldenrod
     white: "#FFFFFF",
     black: "#000000",
     overlay: "rgba(0, 0, 0, 0.4)", // Semi-transparent overlay
