@@ -6,7 +6,11 @@
         "orientation": "default",
         "scheme": "myapp",
         "userInterfaceStyle": "automatic",
-        "newArchEnabled": true,
+        "newArchEnabled": false,
+        "jsEngine": "hermes",
+        "experiments": {
+            "bridgeless": false
+        },
         "ios": {
             "supportsTablet": true
         },

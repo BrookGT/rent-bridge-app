@@ -1,7 +1,6 @@
 // components/BackButton.tsx
 import React from "react";
-import { TouchableOpacity, StyleSheet, Text, StatusBar } from "react-native"; // Use Text as a placeholder
-import { Ionicons } from "@expo/vector-icons";
+import { TouchableOpacity, StyleSheet, Text } from "react-native"; // Use Text as a placeholder
 import { useNavigation, useNavigationState } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import Colors from "../constants/Colors";
@@ -28,12 +27,11 @@ const BackButton = () => {
     return (
         <TouchableOpacity
             style={styles.backButton}
-            onPress={() => {
-                console.log("Back button pressed");
-                navigation.goBack();
-            }}
+            onPress={() => navigation.goBack()}
         >
-            <Ionicons name="arrow-back" size={30} color={Colors.white} />
+            <Text style={{ color: Colors.white, fontSize: 20 }}>←</Text>
+            {"<"}
+            {/* Placeholder */}
         </TouchableOpacity>
     );
 };
@@ -41,10 +39,9 @@ const BackButton = () => {
 const styles = StyleSheet.create({
     backButton: {
         position: "absolute",
-        top: StatusBar.currentHeight ? StatusBar.currentHeight + 10 : 40,
+        top: 50,
         left: 20,
-        zIndex: 100,
-        padding: 5,
+        zIndex: 10,
     },
 });
 

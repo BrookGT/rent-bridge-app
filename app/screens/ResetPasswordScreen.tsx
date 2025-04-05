@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+// screens/ResetPasswordScreen.tsx
+import React, { useState, useEffect } from "react";
 import {
     View,
     Text,
@@ -14,45 +15,40 @@ import Colors from "../../components/constants/Colors";
 import { supabase } from "../../utils/supabase";
 
 type RootStackParamList = {
-    Welcome: undefined;
     Login: undefined;
-    Register: undefined;
+    ResetPassword: undefined;
 };
 
 type NavigationProp = StackNavigationProp<RootStackParamList>;
 
-const RegisterScreen = () => {
+const ResetPasswordScreen = () => {
     const navigation = useNavigation<NavigationProp>();
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [fullName, setFullName] = useState("");
+    const [newPassword, setNewPassword] = useState("");
     const [loading, setLoading] = useState(false);
 
-    const handleSignUp = async () => {
+    useEffect(() => {
+        // Check if the user is authenticated (Supabase logs them in via the magic link)
+        supabase.auth.getSession().then(({ data: { session }, error }) => {
+            if (error || !session) {
+                Alert.alert("Error", "Invalid or expired reset link.");
+                navigation.navigate("Login");
+            }
+        });
+    }, []);
+
+    const handleResetPassword = async () => {
         setLoading(true);
-        const { error } = await supabase.auth.signUp({
-            email,
-            password,
-            options: {
-                data: { full_name: fullName },
-                emailRedirectTo: "yourapp://home",
-            },
+        const { error } = await supabase.auth.updateUser({
+            password: newPassword,
         });
 
         setLoading(false);
         if (error) {
-            if (error.message.includes("User already registered")) {
-                Alert.alert(
-                    "Error",
-                    "This email is already registered. Please log in."
-                );
-            } else {
-                Alert.alert("Error", error.message);
-            }
+            Alert.alert("Error", error.message);
         } else {
             Alert.alert(
                 "Success",
-                "Please check your email for a confirmation link to complete your registration."
+                "Your password has been updated. Please log in."
             );
             navigation.navigate("Login");
         }
@@ -64,43 +60,22 @@ const RegisterScreen = () => {
             style={styles.background}
         >
             <View style={styles.content}>
-                <Text style={styles.title}>Register</Text>
+                <Text style={styles.title}>Reset Password</Text>
                 <TextInput
                     style={styles.input}
-                    placeholder="Full Name"
+                    placeholder="New Password"
                     placeholderTextColor={Colors.white}
-                    value={fullName}
-                    onChangeText={setFullName}
-                />
-                <TextInput
-                    style={styles.input}
-                    placeholder="Email"
-                    placeholderTextColor={Colors.white}
-                    value={email}
-                    onChangeText={setEmail}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                />
-                <TextInput
-                    style={styles.input}
-                    placeholder="Password"
-                    placeholderTextColor={Colors.white}
-                    value={password}
-                    onChangeText={setPassword}
+                    value={newPassword}
+                    onChangeText={setNewPassword}
                     secureTextEntry
                 />
                 <TouchableOpacity
                     style={[styles.button, loading && styles.buttonDisabled]}
-                    onPress={handleSignUp}
+                    onPress={handleResetPassword}
                     disabled={loading}
                 >
                     <Text style={styles.buttonText}>
-                        {loading ? "Registering..." : "Register"}
-                    </Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => navigation.navigate("Login")}>
-                    <Text style={styles.link}>
-                        Already have an account? Log in
+                        {loading ? "Updating..." : "Update Password"}
                     </Text>
                 </TouchableOpacity>
             </View>
@@ -147,11 +122,6 @@ const styles = StyleSheet.create({
         color: Colors.white,
         fontWeight: "bold",
     },
-    link: {
-        color: Colors.white,
-        textDecorationLine: "underline",
-        marginTop: 10,
-    },
 });
 
-export default RegisterScreen;
+export default ResetPasswordScreen;

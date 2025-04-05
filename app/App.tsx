@@ -1,17 +1,27 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { AppRegistry } from "react-native";
-import AppNavigator from "./navigation/AppNavigator"; // Corrected path based on your file structure
+import AppNavigator from "./navigation/AppNavigator";
 
-function App() {
+const linking = {
+    prefixes: ["yourapp://"],
+    config: {
+        screens: {
+            ResetPassword: "reset-password",
+        },
+    },
+};
+
+export default function App() {
+    useEffect(() => {
+        console.log("App initialized successfully");
+    }, []);
+
     return (
-        <NavigationContainer>
+        <NavigationContainer linking={linking}>
             <AppNavigator />
         </NavigationContainer>
     );
 }
 
-// Register the App component as "main" for Expo
 AppRegistry.registerComponent("main", () => App);
-
-export default App;

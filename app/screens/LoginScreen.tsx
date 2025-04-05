@@ -1,131 +1,163 @@
-// LoginScreen.tsx
 import React, { useState } from "react";
 import {
     View,
     Text,
     TextInput,
-    TouchableOpacity,
     StyleSheet,
-    StatusBar,
+    TouchableOpacity,
+    Alert,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { useNavigation } from "@react-navigation/native";
+import { StackNavigationProp } from "@react-navigation/stack";
 import Colors from "../../components/constants/Colors";
-import { StackNavigationProp } from "@react-navigation/stack"; // Import StackNavigationProp
+import { supabase } from "../../utils/supabase";
 
-// Define the parameter list for your stack navigation
 type RootStackParamList = {
-    Home: undefined; // Example Home screen
-    Register: undefined; // Example Register screen
-    Login: undefined; // Login screen
+    Welcome: undefined;
+    Login: undefined;
+    Register: undefined;
+    ResetPassword: undefined;
 };
 
-// Type the navigation prop for the LoginScreen
-type LoginScreenNavigationProp = StackNavigationProp<
-    RootStackParamList,
-    "Login"
->;
+type NavigationProp = StackNavigationProp<RootStackParamList>;
 
-interface Props {
-    navigation: LoginScreenNavigationProp; // Type the navigation prop
-}
-
-const LoginScreen: React.FC<Props> = ({ navigation }) => {
+const LoginScreen = () => {
+    const navigation = useNavigation<NavigationProp>();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [loading, setLoading] = useState(false);
 
-    const handleLogin = () => {
-        // Implement login logic here
-        console.log("Login button pressed");
-        // After successful login, navigate to the Home screen
-        navigation.navigate("Home");
+    const handleSignIn = async () => {
+        setLoading(true);
+        const { error } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+        });
+
+        setLoading(false);
+        if (error) {
+            Alert.alert("Error", error.message);
+        }
+        // Navigation is handled by AppNavigator based on session state
+    };
+
+    const handleForgotPassword = async () => {
+        if (!email) {
+            Alert.alert(
+                "Error",
+                "Please enter your email to reset your password."
+            );
+            return;
+        }
+
+        setLoading(true);
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+            redirectTo: "yourapp://reset-password", // Deep link for password reset
+        });
+
+        setLoading(false);
+        if (error) {
+            Alert.alert("Error", error.message);
+        } else {
+            Alert.alert(
+                "Success",
+                "A password reset link has been sent to your email."
+            );
+        }
     };
 
     return (
-        <View style={styles.container}>
-            <StatusBar
-                barStyle="light-content"
-                backgroundColor={Colors.black}
-                translucent
-            />
-            <View style={styles.formContainer}>
+        <LinearGradient
+            colors={[Colors.primary, Colors.black]}
+            style={styles.background}
+        >
+            <View style={styles.content}>
                 <Text style={styles.title}>Login</Text>
-
                 <TextInput
                     style={styles.input}
                     placeholder="Email"
+                    placeholderTextColor={Colors.white}
                     value={email}
                     onChangeText={setEmail}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
                 />
-
                 <TextInput
                     style={styles.input}
                     placeholder="Password"
-                    secureTextEntry
+                    placeholderTextColor={Colors.white}
                     value={password}
                     onChangeText={setPassword}
+                    secureTextEntry
                 />
-
-                <TouchableOpacity onPress={handleLogin} style={styles.button}>
-                    <Text style={styles.buttonText}>Login</Text>
+                <TouchableOpacity
+                    style={[styles.button, loading && styles.buttonDisabled]}
+                    onPress={handleSignIn}
+                    disabled={loading}
+                >
+                    <Text style={styles.buttonText}>
+                        {loading ? "Logging in..." : "Login"}
+                    </Text>
                 </TouchableOpacity>
-
+                <TouchableOpacity onPress={handleForgotPassword}>
+                    <Text style={styles.link}>Forgot Password?</Text>
+                </TouchableOpacity>
                 <TouchableOpacity
                     onPress={() => navigation.navigate("Register")}
-                    style={styles.registerLink}
                 >
-                    <Text style={styles.registerText}>
+                    <Text style={styles.link}>
                         Don't have an account? Register
                     </Text>
                 </TouchableOpacity>
             </View>
-        </View>
+        </LinearGradient>
     );
 };
 
 const styles = StyleSheet.create({
-    container: {
+    background: {
         flex: 1,
         justifyContent: "center",
         alignItems: "center",
-        backgroundColor: Colors.primary,
     },
-    formContainer: {
+    content: {
         width: "80%",
-        padding: 20,
-        backgroundColor: "white",
-        borderRadius: 10,
-        elevation: 5,
+        alignItems: "center",
     },
     title: {
         fontSize: 24,
         fontWeight: "bold",
+        color: Colors.white,
         marginBottom: 20,
-        textAlign: "center",
     },
     input: {
-        height: 50,
-        borderColor: "#ccc",
-        borderWidth: 1,
-        borderRadius: 5,
-        marginBottom: 15,
-        paddingLeft: 10,
+        width: "100%",
+        backgroundColor: "rgba(255, 255, 255, 0.2)",
+        color: Colors.white,
+        padding: 12,
+        borderRadius: 8,
+        marginVertical: 10,
     },
     button: {
         backgroundColor: Colors.primary,
-        paddingVertical: 15,
-        borderRadius: 5,
-        marginBottom: 15,
-        alignItems: "center",
+        paddingVertical: 12,
+        paddingHorizontal: 24,
+        borderRadius: 8,
+        marginVertical: 10,
+    },
+    buttonDisabled: {
+        opacity: 0.5,
     },
     buttonText: {
-        color: "white",
+        fontSize: 18,
+        color: Colors.white,
         fontWeight: "bold",
     },
-    registerLink: {
-        alignItems: "center",
-    },
-    registerText: {
-        color: Colors.primary,
+    link: {
+        color: Colors.white,
         textDecorationLine: "underline",
+        marginTop: 10,
     },
 });
 

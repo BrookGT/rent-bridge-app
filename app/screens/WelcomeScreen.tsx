@@ -13,7 +13,6 @@ import Button from "@/components/Buttons/Buttons";
 import { useNavigation } from "@react-navigation/native";
 import LottieView from "lottie-react-native";
 import { StackNavigationProp } from "@react-navigation/stack";
-import BackButton from "@/components/Buttons/BackButton";
 
 // Define navigation types
 type RootStackParamList = {
@@ -45,9 +44,6 @@ const WelcomeScreen = () => {
                 colors={[Colors.primary, Colors.black]}
                 style={styles.background}
             >
-                {/* Add the BackButton component */}
-                <BackButton />
-
                 <View style={styles.content}>
                     {/* Logo & Title */}
                     <LottieView
@@ -58,7 +54,7 @@ const WelcomeScreen = () => {
                     />
 
                     <Text style={styles.welcomeText}>
-                        Welcome to RENT-BRIDGE
+                        Welcome to Easy Rent
                         {"\n"}Find your dream home with us!
                     </Text>
                 </View>
@@ -109,7 +105,7 @@ const styles = StyleSheet.create({
     },
     logo: {
         width: 300,
-        height: 100,
+        height: 150,
     },
     rentText: {
         fontSize: 32,

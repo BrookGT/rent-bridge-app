@@ -1,56 +1,127 @@
-import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+// screens/HomeScreen.tsx
+import React, { useEffect, useState } from "react";
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import Colors from "../../components/constants/Colors";
-import { StackNavigationProp } from "@react-navigation/stack";
-import { RouteProp } from "@react-navigation/native";
+import { supabase } from "../../utils/supabase";
 
-type RootStackParamList = {
-    Home: undefined;
-    Welcome: undefined;
-};
+const HomeScreen = () => {
+    interface Profile {
+        id: string;
+        full_name: string;
+        username: string;
+        email: string;
+    }
 
-type HomeScreenProps = {
-    navigation: StackNavigationProp<RootStackParamList, "Home">;
-    route: RouteProp<RootStackParamList, "Home">;
-};
+    const [profile, setProfile] = useState<Profile | null>(null);
+    const [loading, setLoading] = useState(true);
 
-const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
+    useEffect(() => {
+        const fetchProfile = async () => {
+            const {
+                data: { user },
+            } = await supabase.auth.getUser();
+            if (user) {
+                const { data, error } = await supabase
+                    .from("profiles")
+                    .select("id, full_name, username, email")
+                    .eq("id", user.id)
+                    .single();
+
+                if (error) {
+                    console.error("Error fetching profile:", error);
+                } else {
+                    setProfile(data);
+                }
+            }
+            setLoading(false);
+        };
+
+        fetchProfile();
+    }, []);
+
+    const handleSignOut = async () => {
+        const { error } = await supabase.auth.signOut();
+        if (error) {
+            Alert.alert("Error", error.message);
+        }
+        // Navigation to WelcomeScreen is handled by AppNavigator
+    };
+
+    if (loading) {
+        return (
+            <View style={styles.loading}>
+                <Text style={styles.loadingText}>Loading...</Text>
+            </View>
+        );
+    }
+
     return (
-        <View style={styles.container}>
-            <Text style={styles.welcomeText}>
-                🏡 Welcome to Home Screen! 🏡
-            </Text>
-            <TouchableOpacity
-                style={styles.button}
-                onPress={() => navigation.replace("Welcome")} // Use 'replace' to avoid going back to Welcome after logout
-            >
-                <Text style={styles.buttonText}>Logout</Text>
-            </TouchableOpacity>
-        </View>
+        <LinearGradient
+            colors={[Colors.primary, Colors.black]}
+            style={styles.background}
+        >
+            <View style={styles.content}>
+                <Text style={styles.title}>
+                    Welcome, {profile?.full_name || "User"}!
+                </Text>
+                <Text style={styles.info}>
+                    Username: {profile?.username || "Not set"}
+                </Text>
+                <Text style={styles.info}>
+                    Email: {profile?.email || "Not set"}
+                </Text>
+                <TouchableOpacity style={styles.button} onPress={handleSignOut}>
+                    <Text style={styles.buttonText}>Sign Out</Text>
+                </TouchableOpacity>
+            </View>
+        </LinearGradient>
     );
 };
 
 const styles = StyleSheet.create({
-    container: {
+    background: {
         flex: 1,
         justifyContent: "center",
         alignItems: "center",
-        backgroundColor: Colors.primary,
     },
-    welcomeText: {
+    content: {
+        width: "80%",
+        alignItems: "center",
+    },
+    title: {
         fontSize: 24,
         fontWeight: "bold",
-        color: "white",
-        textAlign: "center",
+        color: Colors.white,
         marginBottom: 20,
     },
-    button: {
-        backgroundColor: "white",
-        paddingVertical: 15,
-        paddingHorizontal: 30,
-        borderRadius: 10,
+    info: {
+        fontSize: 18,
+        color: Colors.white,
+        marginVertical: 5,
     },
-    buttonText: { color: Colors.primary, fontSize: 18, fontWeight: "bold" },
+    button: {
+        backgroundColor: Colors.primary,
+        paddingVertical: 12,
+        paddingHorizontal: 24,
+        borderRadius: 8,
+        marginVertical: 20,
+    },
+    buttonText: {
+        fontSize: 18,
+        color: Colors.white,
+        fontWeight: "bold",
+    },
+    loading: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: Colors.black,
+    },
+    loadingText: {
+        fontSize: 18,
+        color: Colors.white,
+    },
 });
 
 export default HomeScreen;
