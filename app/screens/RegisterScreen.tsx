@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
     View,
     Text,
@@ -12,6 +12,8 @@ import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import Colors from "../../components/constants/Colors";
 import { supabase } from "../../utils/supabase";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useHeaderHeight } from "@react-navigation/elements";
 
 type RootStackParamList = {
     Welcome: undefined;
@@ -27,6 +29,22 @@ const RegisterScreen = () => {
     const [password, setPassword] = useState("");
     const [fullName, setFullName] = useState("");
     const [loading, setLoading] = useState(false);
+
+    const headerHeight = useHeaderHeight();
+
+    useEffect(() => {
+        navigation.setOptions({
+            headerTransparent: true,
+            headerTintColor: Colors.white,
+            headerStyle: {
+                elevation: 0,
+                shadowOpacity: 0,
+            },
+            headerTitleStyle: {
+                color: Colors.white,
+            },
+        });
+    }, [navigation]);
 
     const handleSignUp = async () => {
         setLoading(true);
@@ -50,10 +68,7 @@ const RegisterScreen = () => {
                 Alert.alert("Error", error.message);
             }
         } else {
-            Alert.alert(
-                "Success",
-                "Please check your email for a confirmation link to complete your registration."
-            );
+            Alert.alert("Success", "You're successfully registered.");
             navigation.navigate("Login");
         }
     };
@@ -63,47 +78,60 @@ const RegisterScreen = () => {
             colors={[Colors.primary, Colors.black]}
             style={styles.background}
         >
-            <View style={styles.content}>
-                <Text style={styles.title}>Register</Text>
-                <TextInput
-                    style={styles.input}
-                    placeholder="Full Name"
-                    placeholderTextColor={Colors.white}
-                    value={fullName}
-                    onChangeText={setFullName}
-                />
-                <TextInput
-                    style={styles.input}
-                    placeholder="Email"
-                    placeholderTextColor={Colors.white}
-                    value={email}
-                    onChangeText={setEmail}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                />
-                <TextInput
-                    style={styles.input}
-                    placeholder="Password"
-                    placeholderTextColor={Colors.white}
-                    value={password}
-                    onChangeText={setPassword}
-                    secureTextEntry
-                />
-                <TouchableOpacity
-                    style={[styles.button, loading && styles.buttonDisabled]}
-                    onPress={handleSignUp}
-                    disabled={loading}
-                >
-                    <Text style={styles.buttonText}>
-                        {loading ? "Registering..." : "Register"}
-                    </Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => navigation.navigate("Login")}>
-                    <Text style={styles.link}>
-                        Already have an account? Log in
-                    </Text>
-                </TouchableOpacity>
-            </View>
+            <SafeAreaView style={styles.safeArea}>
+                <View style={[styles.content, { paddingTop: headerHeight }]}>
+                    <Text style={styles.title}>Register</Text>
+                    <View style={styles.formContainer}>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Full Name"
+                            placeholderTextColor={Colors.grayMedium}
+                            value={fullName}
+                            onChangeText={setFullName}
+                            accessibilityLabel="Full Name"
+                        />
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Email"
+                            placeholderTextColor={Colors.grayMedium}
+                            value={email}
+                            onChangeText={setEmail}
+                            keyboardType="email-address"
+                            autoCapitalize="none"
+                            accessibilityLabel="Email"
+                        />
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Password"
+                            placeholderTextColor={Colors.grayMedium}
+                            value={password}
+                            onChangeText={setPassword}
+                            secureTextEntry
+                            accessibilityLabel="Password"
+                        />
+                        <TouchableOpacity
+                            style={[
+                                styles.button,
+                                loading && styles.buttonDisabled,
+                            ]}
+                            onPress={handleSignUp}
+                            disabled={loading}
+                            accessibilityLabel="Register Button"
+                        >
+                            <Text style={styles.buttonText}>
+                                {loading ? "Registering..." : "Register"}
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                    <TouchableOpacity
+                        onPress={() => navigation.navigate("Login")}
+                    >
+                        <Text style={styles.link}>
+                            Already have an account? Log in
+                        </Text>
+                    </TouchableOpacity>
+                </View>
+            </SafeAreaView>
         </LinearGradient>
     );
 };
@@ -111,46 +139,65 @@ const RegisterScreen = () => {
 const styles = StyleSheet.create({
     background: {
         flex: 1,
-        justifyContent: "center",
+    },
+    safeArea: {
+        flex: 1,
         alignItems: "center",
     },
     content: {
-        width: "80%",
+        width: "85%",
+        marginTop: 50,
         alignItems: "center",
+        alignSelf: "center",
     },
     title: {
-        fontSize: 24,
+        fontSize: 28,
         fontWeight: "bold",
         color: Colors.white,
-        marginBottom: 20,
+        marginBottom: 30,
+    },
+    formContainer: {
+        width: "100%",
+        backgroundColor: Colors.white,
+        padding: 20,
+        borderRadius: 12,
+        elevation: 5,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
     },
     input: {
         width: "100%",
-        backgroundColor: "rgba(255, 255, 255, 0.2)",
-        color: Colors.white,
-        padding: 12,
+        height: 50,
+        borderColor: Colors.grayLight,
+        borderWidth: 1,
         borderRadius: 8,
-        marginVertical: 10,
+        paddingHorizontal: 12,
+        marginVertical: 12,
+        color: Colors.black,
+        backgroundColor: "#F9FAFB",
     },
     button: {
-        backgroundColor: Colors.primary,
-        paddingVertical: 12,
-        paddingHorizontal: 24,
+        backgroundColor: Colors.secondary,
+        paddingVertical: 14,
         borderRadius: 8,
-        marginVertical: 10,
+        alignItems: "center",
+        marginTop: 20,
     },
     buttonDisabled: {
-        opacity: 0.5,
+        opacity: 0.6,
     },
     buttonText: {
         fontSize: 18,
         color: Colors.white,
-        fontWeight: "bold",
+        fontWeight: "600",
     },
     link: {
-        color: Colors.white,
+        color: Colors.secondary,
         textDecorationLine: "underline",
-        marginTop: 10,
+        marginTop: 20,
+        fontSize: 16,
     },
 });
 
