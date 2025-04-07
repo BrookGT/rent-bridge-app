@@ -20,7 +20,7 @@ type RootStackParamList = {
     Welcome: undefined;
     Login: undefined;
     Register: undefined;
-    ResetPassword: undefined;
+    ResetPassword: { email: string }; // Updated to pass email
     Home: undefined;
 };
 
@@ -31,7 +31,7 @@ const LoginScreen = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
-    const [showPassword, setShowPassword] = useState(false); // Added state for password visibility
+    const [showPassword, setShowPassword] = useState(false);
 
     const headerHeight = useHeaderHeight();
 
@@ -58,7 +58,12 @@ const LoginScreen = () => {
 
         setLoading(false);
         if (error) {
-            Alert.alert("Error", error.message);
+            Alert.alert(
+                "Error",
+                error instanceof Error
+                    ? error.message
+                    : "An unknown error occurred"
+            );
         }
     };
 
@@ -72,18 +77,38 @@ const LoginScreen = () => {
         }
 
         setLoading(true);
-        const { error } = await supabase.auth.resetPasswordForEmail(email, {
-            redirectTo: "yourapp://reset-password",
-        });
 
-        setLoading(false);
-        if (error) {
-            Alert.alert("Error", error.message);
-        } else {
+        try {
+            const response = await fetch(
+                `${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/send-reset-code`,
+                {
+                    method: "POST",
+                    headers: {
+                        Authorization: `Bearer ${process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY}`,
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ email }),
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error("Failed to send reset code");
+            }
+
             Alert.alert(
                 "Success",
-                "A password reset link has been sent to your email."
+                "A 6-digit reset code has been sent to your email."
             );
+            navigation.navigate("ResetPassword", { email });
+        } catch (error) {
+            Alert.alert(
+                "Error",
+                error instanceof Error
+                    ? error.message
+                    : "An unknown error occurred"
+            );
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -107,6 +132,7 @@ const LoginScreen = () => {
                             keyboardType="email-address"
                             autoCapitalize="none"
                             accessibilityLabel="Email"
+                            selectionColor={Colors.white}
                         />
                         <View style={styles.passwordContainer}>
                             <TextInput
@@ -115,8 +141,9 @@ const LoginScreen = () => {
                                 placeholderTextColor={Colors.white}
                                 value={password}
                                 onChangeText={setPassword}
-                                secureTextEntry={!showPassword} // Toggle secureTextEntry based on showPassword
+                                secureTextEntry={!showPassword}
                                 accessibilityLabel="Password"
+                                selectionColor={Colors.white}
                             />
                             <TouchableOpacity
                                 style={styles.toggleButton}
@@ -227,11 +254,6 @@ const styles = StyleSheet.create({
         paddingHorizontal: 12,
         paddingVertical: 8,
         justifyContent: "center",
-    },
-    toggleText: {
-        color: Colors.secondary,
-        fontSize: 14,
-        fontWeight: "600",
     },
     button: {
         backgroundColor: Colors.secondary,

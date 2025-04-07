@@ -123,6 +123,7 @@ const RegisterScreen = () => {
                             value={fullName}
                             onChangeText={setFullName}
                             accessibilityLabel="Full Name"
+                            selectionColor={Colors.white}
                         />
                         <TextInput
                             style={styles.input}
@@ -133,6 +134,7 @@ const RegisterScreen = () => {
                             keyboardType="email-address"
                             autoCapitalize="none"
                             accessibilityLabel="Email"
+                            selectionColor={Colors.white}
                         />
                         <View style={styles.passwordContainer}>
                             <TextInput
@@ -141,8 +143,9 @@ const RegisterScreen = () => {
                                 placeholderTextColor={Colors.white}
                                 value={password}
                                 onChangeText={setPassword}
-                                secureTextEntry={!showPassword} // Toggle secureTextEntry based on showPassword
+                                secureTextEntry={!showPassword}
                                 accessibilityLabel="Password"
+                                selectionColor={Colors.white}
                             />
                             <TouchableOpacity
                                 style={styles.toggleButton}
