@@ -10,34 +10,45 @@ const HomeScreen = () => {
         id: string;
         full_name: string;
         username: string;
-        email: string;
+        // Removed email from Profile interface since it's not in the profiles table
     }
 
     const [profile, setProfile] = useState<Profile | null>(null);
+    const [email, setEmail] = useState<string | undefined>(undefined); // Store email separately
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const fetchProfile = async () => {
+        const fetchUserData = async () => {
+            // Get the authenticated user
             const {
                 data: { user },
+                error: authError,
             } = await supabase.auth.getUser();
-            if (user) {
-                const { data, error } = await supabase
-                    .from("profiles")
-                    .select("id, full_name, username, email")
-                    .eq("id", user.id)
-                    .single();
+            if (authError || !user) {
+                console.error("Error fetching user:", authError);
+                setLoading(false);
+                return;
+            }
 
-                if (error) {
-                    console.error("Error fetching profile:", error);
-                } else {
-                    setProfile(data);
-                }
+            // Set the email from auth.users
+            setEmail(user.email);
+
+            // Fetch the profile from the profiles table
+            const { data, error } = await supabase
+                .from("profiles")
+                .select("id, full_name, username")
+                .eq("id", user.id)
+                .single();
+
+            if (error) {
+                console.error("Error fetching profile:", error);
+            } else {
+                setProfile(data);
             }
             setLoading(false);
         };
 
-        fetchProfile();
+        fetchUserData();
     }, []);
 
     const handleSignOut = async () => {
@@ -68,9 +79,7 @@ const HomeScreen = () => {
                 <Text style={styles.info}>
                     Username: {profile?.username || "Not set"}
                 </Text>
-                <Text style={styles.info}>
-                    Email: {profile?.email || "Not set"}
-                </Text>
+                <Text style={styles.info}>Email: {email || "Not set"}</Text>
                 <TouchableOpacity style={styles.button} onPress={handleSignOut}>
                     <Text style={styles.buttonText}>Sign Out</Text>
                 </TouchableOpacity>

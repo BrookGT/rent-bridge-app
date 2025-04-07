@@ -37,7 +37,13 @@ const Colors = {
     disabledText: "#757575",
 
     // Overlay
-    overlay: "rgba(0, 0, 0, 0.4)", // Semi-transparent overlay
+    overlay: "rgba(0, 0, 0, 0.4)",
+
+    // Glassmorphism colors for form and input backgrounds
+    glassBackground: "rgba(255, 255, 255, 0.3)",
+    glassInputBackground: "rgba(255, 255, 255, 0.1)",
+    glassBorder: "rgba(255, 255, 255, 0.3)",
+    glassInputBorder: "rgba(255, 255, 255, 0.5)",
 };
 
 export default Colors;
