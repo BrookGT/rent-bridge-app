@@ -1,4 +1,4 @@
-// screens/PostHouseScreen.tsx
+// screens/main-screens/PostHouseScreen.tsx
 import React, { useState } from "react";
 import {
     View,
@@ -9,13 +9,24 @@ import {
     Image,
     FlatList,
     Alert,
+    ScrollView,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import MapView, { Marker } from "react-native-maps";
 import Colors from "../../../components/constants/Colors";
 import { supabase } from "../../../utils/supabase";
+import { useNavigation } from "@react-navigation/native";
+import { StackNavigationProp } from "@react-navigation/stack";
+
+type RootStackParamList = {
+    PostHouse: undefined;
+    Account: undefined;
+};
+
+type NavigationProp = StackNavigationProp<RootStackParamList>;
 
 const PostHouseScreen = () => {
+    const navigation = useNavigation<NavigationProp>();
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [price, setPrice] = useState("");
@@ -46,11 +57,14 @@ const PostHouseScreen = () => {
             const { uri } = result.assets[0];
             const fileName = uri.split("/").pop();
             const fileType = fileName?.split(".").pop();
-            const response = await fetch(uri);
-            const blob = await response.blob();
-            const file = new File([blob], fileName || "image", {
-                type: `image/${fileType}`,
-            });
+            const file = await fetch(uri)
+                .then((res) => res.blob())
+                .then(
+                    (blob) =>
+                        new File([blob], fileName || "image", {
+                            type: `image/${fileType}`,
+                        })
+                );
 
             const { data, error } = await supabase.storage
                 .from("house-images")
@@ -87,7 +101,10 @@ const PostHouseScreen = () => {
         const {
             data: { user },
         } = await supabase.auth.getUser();
-        if (!user) return;
+        if (!user) {
+            Alert.alert("Error", "User not authenticated. Please log in.");
+            return;
+        }
 
         const { error } = await supabase.from("houses").insert({
             user_id: user.id,
@@ -105,7 +122,13 @@ const PostHouseScreen = () => {
             console.error("Error posting house:", error);
             Alert.alert("Error", "Failed to post house.");
         } else {
-            Alert.alert("Success", "House posted successfully!");
+            Alert.alert("Success", "House posted successfully!", [
+                {
+                    text: "OK",
+                    onPress: () => navigation.navigate("Account"),
+                },
+            ]);
+            // Reset form
             setTitle("");
             setDescription("");
             setPrice("");
@@ -115,90 +138,104 @@ const PostHouseScreen = () => {
         }
     };
 
+    const renderImageItem = ({ item }: { item: string }) => (
+        <Image source={{ uri: item }} style={styles.uploadedImage} />
+    );
+
     return (
-        <View style={styles.container}>
-            <TextInput
-                style={styles.input}
-                placeholder="Title"
-                placeholderTextColor={Colors.grayLight}
-                value={title}
-                onChangeText={setTitle}
-            />
-            <TextInput
-                style={[styles.input, { height: 100 }]}
-                placeholder="Description"
-                placeholderTextColor={Colors.grayLight}
-                value={description}
-                onChangeText={setDescription}
-                multiline
-            />
-            <TextInput
-                style={styles.input}
-                placeholder="Price ($/month)"
-                placeholderTextColor={Colors.grayLight}
-                value={price}
-                onChangeText={setPrice}
-                keyboardType="numeric"
-            />
-            <TextInput
-                style={styles.input}
-                placeholder="Type (e.g., Apartment, Villa)"
-                placeholderTextColor={Colors.grayLight}
-                value={type}
-                onChangeText={setType}
-            />
-            <TextInput
-                style={styles.input}
-                placeholder="Location (e.g., Downtown, City)"
-                placeholderTextColor={Colors.grayLight}
-                value={location}
-                onChangeText={setLocation}
-            />
-            <MapView
-                style={styles.map}
-                initialRegion={{
-                    latitude,
-                    longitude,
-                    latitudeDelta: 0.01,
-                    longitudeDelta: 0.01,
-                }}
-                onPress={(e) => {
-                    setLatitude(e.nativeEvent.coordinate.latitude);
-                    setLongitude(e.nativeEvent.coordinate.longitude);
-                }}
-            >
-                <Marker coordinate={{ latitude, longitude }} />
-            </MapView>
-            <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
-                <Text style={styles.uploadButtonText}>Upload Images</Text>
-            </TouchableOpacity>
-            <FlatList
-                data={images}
-                renderItem={({ item }) => (
-                    <Image
-                        source={{ uri: item }}
-                        style={styles.uploadedImage}
+        <ScrollView contentContainerStyle={styles.scrollContainer}>
+            <View style={styles.container}>
+                <TextInput
+                    style={styles.input}
+                    placeholder="Title"
+                    placeholderTextColor={Colors.grayLight}
+                    value={title}
+                    onChangeText={setTitle}
+                />
+                <TextInput
+                    style={[styles.input, { height: 100 }]}
+                    placeholder="Description"
+                    placeholderTextColor={Colors.grayLight}
+                    value={description}
+                    onChangeText={setDescription}
+                    multiline
+                />
+                <TextInput
+                    style={styles.input}
+                    placeholder="Price ($/month)"
+                    placeholderTextColor={Colors.grayLight}
+                    value={price}
+                    onChangeText={setPrice}
+                    keyboardType="numeric"
+                />
+                <TextInput
+                    style={styles.input}
+                    placeholder="Type (e.g., Apartment, Villa)"
+                    placeholderTextColor={Colors.grayLight}
+                    value={type}
+                    onChangeText={setType}
+                />
+                <TextInput
+                    style={styles.input}
+                    placeholder="Location (e.g., Downtown, City)"
+                    placeholderTextColor={Colors.grayLight}
+                    value={location}
+                    onChangeText={setLocation}
+                />
+                <MapView
+                    style={styles.map}
+                    initialRegion={{
+                        latitude,
+                        longitude,
+                        latitudeDelta: 0.01,
+                        longitudeDelta: 0.01,
+                    }}
+                    onPress={(e) => {
+                        setLatitude(e.nativeEvent.coordinate.latitude);
+                        setLongitude(e.nativeEvent.coordinate.longitude);
+                    }}
+                >
+                    <Marker coordinate={{ latitude, longitude }} />
+                </MapView>
+                <TouchableOpacity
+                    style={styles.uploadButton}
+                    onPress={pickImage}
+                >
+                    <Text style={styles.uploadButtonText}>Upload Images</Text>
+                </TouchableOpacity>
+                {images.length === 0 ? (
+                    <Text style={styles.noImagesText}>
+                        No images uploaded yet.
+                    </Text>
+                ) : (
+                    <FlatList
+                        data={images}
+                        renderItem={renderImageItem}
+                        keyExtractor={(item, index) => index.toString()}
+                        horizontal
+                        style={styles.imageList}
                     />
                 )}
-                keyExtractor={(item, index) => index.toString()}
-                horizontal
-                style={styles.imageList}
-            />
-            <TouchableOpacity
-                style={styles.submitButton}
-                onPress={handleSubmit}
-            >
-                <Text style={styles.submitButtonText}>Post House</Text>
-            </TouchableOpacity>
-        </View>
+                <TouchableOpacity
+                    style={styles.submitButton}
+                    onPress={handleSubmit}
+                >
+                    <Text style={styles.submitButtonText}>Post House</Text>
+                </TouchableOpacity>
+            </View>
+        </ScrollView>
     );
 };
 
 const styles = StyleSheet.create({
+    scrollContainer: {
+        flexGrow: 1,
+        backgroundColor: Colors.black,
+    },
     container: {
         flex: 1,
-        backgroundColor: Colors.black,
         padding: 20,
+        backgroundColor: Colors.black,
     },
     input: {
         backgroundColor: Colors.glassBackground,
@@ -229,6 +266,7 @@ const styles = StyleSheet.create({
     },
     imageList: {
         marginBottom: 15,
+        maxHeight: 120, // Limit the height of the image list
     },
     uploadedImage: {
         width: 100,
@@ -236,11 +274,18 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         marginRight: 10,
     },
+    noImagesText: {
+        color: Colors.grayLight,
+        fontSize: 16,
+        textAlign: "center",
+        marginBottom: 15,
+    },
     submitButton: {
         backgroundColor: Colors.primary,
         paddingVertical: 15,
         borderRadius: 10,
         alignItems: "center",
+        marginBottom: 20, // Ensure there's space at the bottom
     },
     submitButtonText: {
         fontSize: 18,

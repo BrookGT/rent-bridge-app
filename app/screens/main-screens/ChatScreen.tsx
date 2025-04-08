@@ -1,4 +1,4 @@
-// screens/ChatScreen.tsx
+// screens/main-screens/ChatScreen.tsx
 import React, { useState, useEffect } from "react";
 import {
     View,
@@ -32,46 +32,51 @@ const ChatScreen = () => {
         useState<Conversation | null>(null);
     const [messages, setMessages] = useState<Message[]>([]);
     const [newMessage, setNewMessage] = useState("");
-    const [currentUser, setCurrentUser] = useState<any>(null); // State to store the current user
-
-    useEffect(() => {
-        const fetchUser = async () => {
-            const { data: user } = await supabase.auth.getUser();
-            setCurrentUser(user);
-        };
-
-        fetchUser();
-    }, []);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchConversations = async () => {
-            if (!currentUser) return;
+            try {
+                const {
+                    data: { user },
+                    error: userError,
+                } = await supabase.auth.getUser();
+                if (userError || !user) {
+                    setError("User not authenticated. Please log in.");
+                    return;
+                }
 
-            const { data, error } = await supabase
-                .from("conversations")
-                .select(
-                    "id, house_id, renter_id, borrower_id, house:house_id (title)"
-                )
-                .or(
-                    `renter_id.eq.${currentUser.id},borrower_id.eq.${currentUser.id}`
-                );
+                const { data, error } = await supabase
+                    .from("conversations")
+                    .select(
+                        "id, house_id, renter_id, borrower_id, house:house_id (title)"
+                    )
+                    .or(`renter_id.eq.${user.id},borrower_id.eq.${user.id}`);
 
-            if (error) {
-                console.error("Error fetching conversations:", error);
-            } else {
+                if (error) {
+                    console.error("Error fetching conversations:", error);
+                    setError(`Failed to fetch conversations: ${error.message}`);
+                    return;
+                }
+
                 setConversations(
-                    data.map((conversation) => ({
+                    (data || []).map((conversation) => ({
                         ...conversation,
                         house: Array.isArray(conversation.house)
                             ? conversation.house[0]
                             : conversation.house,
                     }))
                 );
+            } catch (err) {
+                console.error("Unexpected error fetching conversations:", err);
+                setError(
+                    "An unexpected error occurred while fetching conversations."
+                );
             }
         };
 
         fetchConversations();
-    }, [currentUser]);
+    }, []);
 
     useEffect(() => {
         if (!selectedConversation) return;
@@ -85,8 +90,9 @@ const ChatScreen = () => {
 
             if (error) {
                 console.error("Error fetching messages:", error);
+                setError(`Failed to fetch messages: ${error.message}`);
             } else {
-                setMessages(data);
+                setMessages(data || []);
             }
         };
 
@@ -115,16 +121,25 @@ const ChatScreen = () => {
     }, [selectedConversation]);
 
     const sendMessage = async () => {
-        if (!newMessage.trim() || !selectedConversation || !currentUser) return;
+        if (!newMessage.trim() || !selectedConversation) return;
+
+        const {
+            data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) {
+            setError("User not authenticated. Please log in.");
+            return;
+        }
 
         const { error } = await supabase.from("messages").insert({
             conversation_id: selectedConversation.id,
-            sender_id: currentUser.id,
+            sender_id: user.id,
             content: newMessage.trim(),
         });
 
         if (error) {
             console.error("Error sending message:", error);
+            setError(`Failed to send message: ${error.message}`);
         } else {
             setNewMessage("");
         }
@@ -140,7 +155,17 @@ const ChatScreen = () => {
     );
 
     const renderMessageItem = ({ item }: { item: Message }) => {
-        const isSender = item.sender_id === currentUser?.id;
+        const [isSender, setIsSender] = useState(false);
+
+        useEffect(() => {
+            const fetchUser = async () => {
+                const { data: userResponse } = await supabase.auth.getUser();
+                const user = userResponse?.user;
+                setIsSender(item.sender_id === user?.id);
+            };
+
+            fetchUser();
+        }, [item.sender_id]);
 
         return (
             <View
@@ -153,6 +178,14 @@ const ChatScreen = () => {
             </View>
         );
     };
+
+    if (error) {
+        return (
+            <View style={styles.errorContainer}>
+                <Text style={styles.errorText}>{error}</Text>
+            </View>
+        );
+    }
 
     return (
         <View style={styles.container}>
@@ -173,7 +206,7 @@ const ChatScreen = () => {
                             value={newMessage}
                             onChangeText={setNewMessage}
                             placeholder="Type a message..."
-                            placeholderTextColor={Colors.grayDark}
+                            placeholderTextColor={Colors.grayLight}
                         />
                         <TouchableOpacity
                             style={styles.sendButton}
@@ -249,7 +282,7 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         padding: 20,
         borderTopWidth: 1,
-        borderTopColor: Colors.grayDark,
+        borderTopColor: Colors.grayLight,
     },
     input: {
         flex: 1,
@@ -271,6 +304,18 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: Colors.white,
         fontWeight: "bold",
+    },
+    errorContainer: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: Colors.black,
+    },
+    errorText: {
+        color: Colors.white,
+        fontSize: 18,
+        textAlign: "center",
+        paddingHorizontal: 20,
     },
 });
 
