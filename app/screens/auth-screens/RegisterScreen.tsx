@@ -11,8 +11,8 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
-import Colors from "../../components/constants/Colors";
-import { supabase } from "../../utils/supabase";
+import Colors from "../../../components/constants/Colors";
+import { supabase } from "../../../utils/supabase";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { Ionicons } from "@expo/vector-icons";

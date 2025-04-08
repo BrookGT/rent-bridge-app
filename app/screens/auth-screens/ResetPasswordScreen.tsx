@@ -10,7 +10,7 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
-import Colors from "../../components/constants/Colors";
+import Colors from "../../../components/constants/Colors";
 import { Ionicons } from "@expo/vector-icons";
 
 type RootStackParamList = {

@@ -3,11 +3,11 @@ import { createStackNavigator } from "@react-navigation/stack";
 import { Platform } from "react-native";
 import { supabase } from "../../utils/supabase";
 import WelcomeScreen from "../screens/WelcomeScreen";
-import LoginScreen from "../screens/LoginScreen";
-import RegisterScreen from "../screens/RegisterScreen";
-import HomeScreen from "../screens/HomeScreen";
+import LoginScreen from "../screens/auth-screens/LoginScreen";
+import RegisterScreen from "../screens/auth-screens/RegisterScreen";
+import HomeScreen from "../screens/main-screens/HomeScreen";
 import AdminDashboard from "../screens/AdminDashboard";
-import ResetPasswordScreen from "../screens/ResetPasswordScreen";
+import ResetPasswordScreen from "../screens/auth-screens/ResetPasswordScreen";
 import { Session } from "@supabase/supabase-js";
 
 type RootStackParamList = {
@@ -16,7 +16,7 @@ type RootStackParamList = {
     Register: undefined;
     Home: undefined;
     AdminDashboard: undefined;
-    ResetPassword: undefined;
+    ResetPassword: { email?: string };
 };
 
 const Stack = createStackNavigator<RootStackParamList>();

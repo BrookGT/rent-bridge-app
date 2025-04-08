@@ -10,8 +10,8 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
-import Colors from "../../components/constants/Colors";
-import { supabase } from "../../utils/supabase";
+import Colors from "../../../components/constants/Colors";
+import { supabase } from "../../../utils/supabase";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { Ionicons } from "@expo/vector-icons";
@@ -20,7 +20,7 @@ type RootStackParamList = {
     Welcome: undefined;
     Login: undefined;
     Register: undefined;
-    ResetPassword: { email: string }; // Updated to pass email
+    ResetPassword: { email: string };
     Home: undefined;
 };
 
@@ -75,24 +75,20 @@ const LoginScreen = () => {
             );
             return;
         }
-
+        console.log("Sending reset code for email:", email);
         setLoading(true);
 
         try {
-            const response = await fetch(
-                `${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/send-reset-code`,
+            const { data, error } = await supabase.functions.invoke(
+                "send-reset-code",
                 {
-                    method: "POST",
-                    headers: {
-                        Authorization: `Bearer ${process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY}`,
-                        "Content-Type": "application/json",
-                    },
                     body: JSON.stringify({ email }),
                 }
             );
 
-            if (!response.ok) {
-                throw new Error("Failed to send reset code");
+            if (error) {
+                console.error("Error from send-reset-code:", error.message);
+                throw new Error(error.message || "Failed to send reset code");
             }
 
             Alert.alert(
