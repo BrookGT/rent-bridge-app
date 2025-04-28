@@ -1,3 +1,4 @@
+// components/constants/Colors.ts
 const Colors = {
     // Primary (Teal) and its shades
     primary: "#00796B", // Teal
@@ -14,6 +15,13 @@ const Colors = {
     accentGreen: "#4CAF50",
     accentRed: "#F44336",
 
+    // Figma-specific colors (already added)
+    tealDark: "#1A5F7A", // Used for titles, active icons, and active labels
+    tealMedium: "#2A7F9A", // Used for prices
+    grayMediumDark: "#666666", // Used for secondary text, inactive icons, and labels
+    goldenrodDark: "#DAA520", // Used for search button
+    goldenrodDarker: "#B8860B", // Used for search button hover
+
     // Neutral colors
     white: "#FFFFFF",
     black: "#000000",
@@ -22,8 +30,8 @@ const Colors = {
     grayDark: "#616161",
 
     // Background and surface
-    background: "#FAFAFA",
-    surface: "#FFFFFF",
+    background: "#FAFAFA", // Light background (used in Figma for the overall screen)
+    surface: "#FFFFFF", // White surface for cards and navigation bar
 
     // Text colors
     text: "#F5F5F5", // Light grayish text (renamed as textLight)
@@ -44,6 +52,9 @@ const Colors = {
     glassInputBackground: "rgba(255, 255, 255, 0.1)",
     glassBorder: "rgba(255, 255, 255, 0.3)",
     glassInputBorder: "rgba(255, 255, 255, 0.5)",
+
+    // Figma-specific background for HomeScreen
+    homeScreenBackground: "#1A5F7A", // Teal background for the HomeScreen
 };
 
 export default Colors;

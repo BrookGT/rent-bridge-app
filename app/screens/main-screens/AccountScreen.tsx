@@ -152,6 +152,11 @@ const styles = StyleSheet.create({
     profileSection: {
         alignItems: "center",
         marginBottom: 30,
+        backgroundColor: Colors.glassBackground,
+        borderRadius: 20,
+        padding: 20,
+        borderWidth: 1,
+        borderColor: Colors.glassBorder,
     },
     avatar: {
         width: 100,

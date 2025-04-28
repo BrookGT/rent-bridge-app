@@ -1,4 +1,3 @@
-// navigation/AppNavigator.tsx
 import React, { useEffect, useState } from "react";
 import { Platform, Text, View } from "react-native";
 import { createStackNavigator } from "@react-navigation/stack";
@@ -27,7 +26,7 @@ import PostHouseScreen from "../screens/main-screens/PostHouseScreen";
 import AdminDashboard from "../screens/AdminDashboard";
 
 type RootStackParamList = {
-    Welcome: undefined;
+    Welcome: { session: Session | null; isAdmin: boolean };
     Login: undefined;
     Register: undefined;
     Main: undefined;
@@ -54,7 +53,7 @@ const MainTabs = () => (
         screenOptions={({ route }) => ({
             tabBarIcon: ({ focused, color, size }) => {
                 let iconName: keyof typeof Ionicons.glyphMap =
-                    "help-circle-outline"; // Default icon
+                    "help-circle-outline";
                 if (route.name === "Home") {
                     iconName = focused ? "home" : "home-outline";
                 } else if (route.name === "Houses") {
@@ -66,27 +65,95 @@ const MainTabs = () => (
                 } else if (route.name === "Account") {
                     iconName = focused ? "person" : "person-outline";
                 }
-                return <Ionicons name={iconName} size={size} color={color} />;
+
+                if (focused) {
+                    return (
+                        <View
+                            style={[
+                                styles.iconContainer,
+                                styles.iconContainerActive,
+                            ]}
+                        >
+                            <Ionicons
+                                name={iconName}
+                                size={28}
+                                color={Colors.white}
+                            />
+                        </View>
+                    );
+                }
+
+                return (
+                    <Ionicons
+                        name={iconName}
+                        size={28}
+                        color={Colors.grayMediumDark}
+                    />
+                );
             },
-            tabBarActiveTintColor: Colors.secondary,
-            tabBarInactiveTintColor: Colors.grayLight,
+            tabBarActiveTintColor: Colors.tealDark,
+            tabBarInactiveTintColor: Colors.grayMediumDark,
+            tabBarLabelStyle: { fontSize: 12, marginBottom: 5 },
             tabBarStyle: {
-                backgroundColor: Colors.black,
-                borderTopColor: Colors.grayLight,
-                borderTopWidth: 1,
+                backgroundColor: Colors.white,
                 paddingBottom: 5,
                 paddingTop: 5,
+                height: 70,
             },
             headerShown: false,
         })}
     >
-        <Tab.Screen name="Home" component={HomeScreen} />
-        <Tab.Screen name="Houses" component={HousesScreen} />
-        <Tab.Screen name="Favorites" component={FavoritesScreen} />
-        <Tab.Screen name="Chats" component={ChatScreen} />
-        <Tab.Screen name="Account" component={AccountScreen} />
+        <Tab.Screen
+            name="Home"
+            component={HomeScreen}
+            options={{ tabBarLabel: "Home" }}
+        />
+        <Tab.Screen
+            name="Houses"
+            component={HousesScreen}
+            options={{ tabBarLabel: "Search" }}
+        />
+        <Tab.Screen
+            name="Favorites"
+            component={FavoritesScreen}
+            options={{ tabBarLabel: "Favorites" }}
+        />
+        <Tab.Screen
+            name="Chats"
+            component={ChatScreen}
+            options={{ tabBarLabel: "Chat" }}
+        />
+        <Tab.Screen
+            name="Account"
+            component={AccountScreen}
+            options={{ tabBarLabel: "Account" }}
+        />
     </Tab.Navigator>
 );
+
+import { ViewStyle } from "react-native";
+
+const styles = {
+    iconContainer: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: Colors.white,
+        justifyContent: "center" as ViewStyle["justifyContent"],
+        alignItems: "center" as ViewStyle["alignItems"],
+        shadowColor: Colors.black,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5,
+    },
+    iconContainerActive: {
+        borderWidth: 2,
+        borderColor: Colors.tealDark,
+        backgroundColor: Colors.tealDark,
+        marginBottom: 5,
+    },
+};
 
 class ErrorBoundary extends React.Component<{ children: React.ReactNode }> {
     state: { hasError: boolean; error: Error | null } = {
@@ -128,22 +195,17 @@ export default function AppNavigator() {
     const [initializing, setInitializing] = useState(true);
 
     useEffect(() => {
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            setSession(session);
-            if (session) {
-                checkUserRole(session.user.id);
-            }
-            setInitializing(false);
-        });
-
+        // Use onAuthStateChange as the single source of truth
         const {
             data: { subscription },
         } = supabase.auth.onAuthStateChange((_event, session) => {
+            console.log("Auth state changed:", session);
             setSession(session);
             if (session) {
                 checkUserRole(session.user.id);
             } else {
                 setIsAdmin(false);
+                setInitializing(false); // Auth state resolved
             }
         });
 
@@ -151,6 +213,7 @@ export default function AppNavigator() {
     }, []);
 
     const checkUserRole = async (userId: string) => {
+        console.log("Checking user role for ID:", userId);
         const { data, error } = await supabase
             .from("profiles")
             .select("is_admin")
@@ -161,8 +224,10 @@ export default function AppNavigator() {
             console.error("Error fetching user role:", error);
             setIsAdmin(false);
         } else {
+            console.log("User role:", data?.is_admin);
             setIsAdmin(data?.is_admin || false);
         }
+        setInitializing(false); // Auth state resolved
     };
 
     if (initializing) {
@@ -182,12 +247,17 @@ export default function AppNavigator() {
         );
     }
 
+    // Dynamically set initial route based on session and isAdmin
+    const initialRoute = session
+        ? isAdmin
+            ? "AdminDashboard"
+            : "Main"
+        : "Welcome";
+
     return (
         <ErrorBoundary>
             <Stack.Navigator
-                initialRouteName={
-                    session ? (isAdmin ? "AdminDashboard" : "Main") : "Welcome"
-                }
+                initialRouteName={initialRoute}
                 screenOptions={{
                     headerStyle: { backgroundColor: Colors.black },
                     headerTintColor: Colors.white,
@@ -207,66 +277,58 @@ export default function AppNavigator() {
                     }),
                 }}
             >
-                {session ? (
-                    <>
-                        {isAdmin ? (
-                            <Stack.Screen
-                                name="AdminDashboard"
-                                component={AdminDashboard}
-                                options={{
-                                    title: "Admin Dashboard",
-                                    headerLeft: () => null,
-                                }}
-                            />
-                        ) : (
-                            <>
-                                <Stack.Screen
-                                    name="Main"
-                                    component={MainTabs}
-                                    options={{ headerShown: false }}
-                                />
-                                <Stack.Screen
-                                    name="HouseDetail"
-                                    component={HouseDetailScreen}
-                                    options={{ title: "House Details" }}
-                                />
-                                <Stack.Screen
-                                    name="Chat"
-                                    component={ChatScreen}
-                                    options={{ title: "Chat" }}
-                                />
-                                <Stack.Screen
-                                    name="PostHouse"
-                                    component={PostHouseScreen}
-                                    options={{ title: "Post a House" }}
-                                />
-                            </>
-                        )}
-                    </>
-                ) : (
-                    <>
-                        <Stack.Screen
-                            name="Welcome"
-                            component={WelcomeScreen}
-                            options={{ headerShown: false }}
+                <Stack.Screen name="Welcome" options={{ headerShown: false }}>
+                    {(props) => (
+                        <WelcomeScreen
+                            {...props}
+                            session={session}
+                            isAdmin={isAdmin}
                         />
-                        <Stack.Screen
-                            name="Login"
-                            component={LoginScreen}
-                            options={{ title: "Login" }}
-                        />
-                        <Stack.Screen
-                            name="Register"
-                            component={RegisterScreen}
-                            options={{ title: "Register" }}
-                        />
-                        <Stack.Screen
-                            name="ResetPassword"
-                            component={ResetPasswordScreen}
-                            options={{ title: "Reset Password" }}
-                        />
-                    </>
-                )}
+                    )}
+                </Stack.Screen>
+                <Stack.Screen
+                    name="Login"
+                    component={LoginScreen}
+                    options={{ title: "Login" }}
+                />
+                <Stack.Screen
+                    name="Register"
+                    component={RegisterScreen}
+                    options={{ title: "Register" }}
+                />
+                <Stack.Screen
+                    name="ResetPassword"
+                    component={ResetPasswordScreen}
+                    options={{ title: "Reset Password" }}
+                />
+                <Stack.Screen
+                    name="Main"
+                    component={MainTabs}
+                    options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                    name="HouseDetail"
+                    component={HouseDetailScreen}
+                    options={{ title: "House Details" }}
+                />
+                <Stack.Screen
+                    name="Chat"
+                    component={ChatScreen}
+                    options={{ title: "Chat" }}
+                />
+                <Stack.Screen
+                    name="PostHouse"
+                    component={PostHouseScreen}
+                    options={{ title: "Post a House" }}
+                />
+                <Stack.Screen
+                    name="AdminDashboard"
+                    component={AdminDashboard}
+                    options={{
+                        title: "Admin Dashboard",
+                        headerLeft: () => null,
+                    }}
+                />
             </Stack.Navigator>
         </ErrorBoundary>
     );

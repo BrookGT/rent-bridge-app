@@ -143,18 +143,18 @@ const HousesScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: Colors.black,
+        backgroundColor: Colors.tealDark, // Changed to match the app's theme
         paddingTop: 50,
         paddingHorizontal: 20,
     },
     searchBar: {
-        backgroundColor: Colors.glassBackground,
-        color: Colors.white,
+        backgroundColor: Colors.white, // Changed to white for better contrast
+        color: Colors.black, // Text color changed to black
         padding: 10,
         borderRadius: 10,
         marginBottom: 15,
         borderWidth: 1,
-        borderColor: Colors.glassBorder,
+        borderColor: Colors.grayMedium, // Adjusted border color for subtle contrast
     },
     filters: {
         flexDirection: "row",
@@ -162,30 +162,37 @@ const styles = StyleSheet.create({
     },
     picker: {
         flex: 1,
-        backgroundColor: Colors.glassBackground,
-        color: Colors.white,
+        backgroundColor: Colors.white, // Changed to white for consistency
+        color: Colors.black, // Text color changed to black
         borderRadius: 10,
         marginRight: 10,
+        borderWidth: 1,
+        borderColor: Colors.grayMedium, // Adjusted border color
     },
     locationFilter: {
         flex: 1,
-        backgroundColor: Colors.glassBackground,
-        color: Colors.white,
+        backgroundColor: Colors.white, // Changed to white for consistency
+        color: Colors.black, // Text color changed to black
         padding: 10,
         borderRadius: 10,
         borderWidth: 1,
-        borderColor: Colors.glassBorder,
+        borderColor: Colors.grayMedium, // Adjusted border color
     },
     houseList: {
         paddingBottom: 20,
     },
     houseCard: {
-        backgroundColor: Colors.glassBackground,
+        backgroundColor: Colors.white, // Changed to white for better readability
         borderRadius: 15,
         marginBottom: 15,
         overflow: "hidden",
         borderWidth: 1,
-        borderColor: Colors.glassBorder,
+        borderColor: Colors.grayMedium, // Adjusted border color
+        shadowColor: Colors.black, // Added shadow for better card elevation
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 5,
+        elevation: 3,
     },
     houseImage: {
         width: "100%",
@@ -199,17 +206,17 @@ const styles = StyleSheet.create({
     houseTitle: {
         fontSize: 18,
         fontWeight: "bold",
-        color: Colors.white,
+        color: Colors.tealDark, // Changed to tealDark for consistency
     },
     houseLocation: {
         fontSize: 14,
-        color: Colors.grayLight,
+        color: Colors.grayMediumDark, // Adjusted to grayMediumDark for subtle contrast
         marginVertical: 5,
     },
     housePrice: {
         fontSize: 16,
         fontWeight: "bold",
-        color: Colors.secondary,
+        color: Colors.secondary, // Kept secondary color for price
     },
 });
 

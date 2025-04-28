@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
     View,
     StatusBar,
@@ -13,12 +13,15 @@ import Button from "@/components/Buttons/Buttons";
 import { useNavigation } from "@react-navigation/native";
 import LottieView from "lottie-react-native";
 import { StackNavigationProp } from "@react-navigation/stack";
+import { Session } from "@supabase/supabase-js";
 
 // Define navigation types
 type RootStackParamList = {
-    Welcome: undefined;
+    Welcome: { session: Session | null; isAdmin: boolean };
     Login: undefined;
     Register: undefined;
+    Main: undefined;
+    AdminDashboard: undefined;
 };
 
 type WelcomeScreenNavigationProp = StackNavigationProp<
@@ -26,10 +29,31 @@ type WelcomeScreenNavigationProp = StackNavigationProp<
     "Welcome"
 >;
 
-const { width, height } = Dimensions.get("window"); // Get screen dimensions
+const { width, height } = Dimensions.get("window");
 
-const WelcomeScreen = () => {
+interface WelcomeScreenProps {
+    session: Session | null;
+    isAdmin: boolean;
+}
+
+const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ session, isAdmin }) => {
     const navigation = useNavigation<WelcomeScreenNavigationProp>();
+
+    // Automatically navigate based on authentication status
+    useEffect(() => {
+        if (session) {
+            if (isAdmin) {
+                navigation.replace("AdminDashboard");
+            } else {
+                navigation.replace("Main"); // Navigates to the tab navigator (HomeScreen)
+            }
+        }
+    }, [session, isAdmin, navigation]);
+
+    // Render nothing or a loading state while navigating
+    if (session) {
+        return null; // Prevents flashing of WelcomeScreen during navigation
+    }
 
     return (
         <View style={styles.container}>
@@ -99,19 +123,9 @@ const styles = StyleSheet.create({
     content: {
         alignItems: "center",
     },
-    logoContainer: {
-        alignItems: "center",
-        marginBottom: 20,
-    },
     logo: {
         width: 300,
         height: 150,
-    },
-    rentText: {
-        fontSize: 32,
-        fontWeight: "bold",
-        color: Colors.white,
-        marginTop: -10,
     },
     welcomeText: {
         fontSize: 22,

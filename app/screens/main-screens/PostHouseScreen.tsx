@@ -74,70 +74,62 @@ const PostHouseScreen = () => {
     };
 
     const pickImage = async () => {
-        const { status } =
-            await ImagePicker.requestMediaLibraryPermissionsAsync();
-        if (status !== "granted") {
-            Alert.alert(
-                "Permission denied",
-                "We need permission to access your photos."
-            );
-            return;
-        }
-
-        const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ["images"],
-            allowsEditing: true,
-            quality: 1,
-        });
-
-        if (!result.canceled) {
-            const { uri } = result.assets[0];
-            const fileName = uri.split("/").pop();
-            const fileExt = fileName?.split(".").pop() || "jpg";
-            const filePath = `${Date.now()}.${fileExt}`;
-
-            try {
-                // Create a file object for Supabase
-                const response = await fetch(uri);
-                const blob = await response.blob();
-                const file = new File([blob], filePath, {
-                    type: `image/${fileExt}`,
-                });
-
-                // Upload to Supabase storage
-                const { data, error } = await supabase.storage
-                    .from("house-images")
-                    .upload(filePath, file);
-
-                if (error) {
-                    console.error("Supabase upload error:", error);
-                    Alert.alert(
-                        "Error",
-                        `Failed to upload image: ${error.message}`
-                    );
-                    return;
-                }
-
-                // Get the public URL
-                const { data: publicUrlData } = supabase.storage
-                    .from("house-images")
-                    .getPublicUrl(filePath);
-
-                if (!publicUrlData.publicUrl) {
-                    console.error("Failed to get public URL");
-                    Alert.alert("Error", "Failed to retrieve image URL.");
-                    return;
-                }
-
-                setImages((prev) => [...prev, publicUrlData.publicUrl]);
-                Alert.alert("Success", "Image uploaded successfully!");
-            } catch (err) {
-                console.error("Unexpected error during image upload:", err);
+        try {
+            const { status } =
+                await ImagePicker.requestMediaLibraryPermissionsAsync();
+            if (status !== "granted") {
                 Alert.alert(
-                    "Error",
-                    `An unexpected error occurred: ${(err as Error).message}`
+                    "Permission required",
+                    "We need access to your photos to upload images."
                 );
+                return;
             }
+
+            const result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                allowsEditing: true,
+                quality: 0.8,
+                allowsMultipleSelection: true, // Enable multiple selection
+            });
+
+            if (!result.canceled && result.assets) {
+                const uploadedUrls = await Promise.all(
+                    result.assets.map(async (asset) => {
+                        const uri = asset.uri;
+                        const filename = uri.substring(
+                            uri.lastIndexOf("/") + 1
+                        );
+                        const extension = filename.split(".").pop();
+                        const newName = `${Date.now()}-${filename}`;
+
+                        // Convert image to blob
+                        const response = await fetch(uri);
+                        const blob = await response.blob();
+
+                        // Upload to Supabase storage
+                        const { data, error } = await supabase.storage
+                            .from("house-images")
+                            .upload(newName, blob);
+
+                        if (error) throw error;
+
+                        // Get public URL
+                        const { data: publicData } = supabase.storage
+                            .from("house-images")
+                            .getPublicUrl(data.path);
+
+                        return publicData.publicUrl;
+                    })
+                );
+
+                setImages((prev) => [...prev, ...uploadedUrls]);
+            }
+        } catch (error) {
+            console.error("Image upload error:", error);
+            Alert.alert(
+                "Upload failed",
+                "Couldn't upload images. Please try again."
+            );
         }
     };
 
@@ -383,26 +375,29 @@ const styles = StyleSheet.create({
     },
     scrollContainer: {
         padding: 20,
-        paddingBottom: 20,
+        paddingBottom: 100,
     },
     input: {
         backgroundColor: Colors.glassBackground,
         color: Colors.white,
         padding: 15,
-        borderRadius: 10,
+        borderRadius: 15,
         marginBottom: 15,
         borderWidth: 1,
         borderColor: Colors.glassBorder,
+        fontSize: 16,
     },
     pickerContainer: {
         backgroundColor: Colors.glassBackground,
-        borderRadius: 10,
+        borderRadius: 15,
         marginBottom: 15,
         borderWidth: 1,
         borderColor: Colors.glassBorder,
+        overflow: "hidden",
     },
     picker: {
         color: Colors.white,
+        height: 50,
     },
     pickerItem: {
         color: Colors.white,

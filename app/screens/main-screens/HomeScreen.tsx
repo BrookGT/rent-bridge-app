@@ -1,261 +1,276 @@
-// screens/HomeScreen.tsx
-import React, { useEffect, useState } from "react";
+// screens/main-screens/HomeScreen.tsx
+import React, { useRef } from "react";
 import {
     View,
     Text,
     StyleSheet,
     TouchableOpacity,
     FlatList,
+    StatusBar,
     Image,
     Dimensions,
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
-import Animated, { FadeInDown } from "react-native-reanimated";
+import Animated, {
+    FadeInDown,
+    SlideInRight,
+    SlideInLeft,
+} from "react-native-reanimated";
 import Colors from "../../../components/constants/Colors";
-import { supabase } from "../../../utils/supabase";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
-
-const { width } = Dimensions.get("window");
+import { LinearGradient } from "expo-linear-gradient";
 
 type RootStackParamList = {
     Houses: undefined;
-    HouseDetail: { houseId: string };
+    Account: undefined;
 };
 
 type NavigationProp = StackNavigationProp<RootStackParamList>;
 
-interface Profile {
-    id: string;
-    full_name: string;
-    username: string;
-}
-
-interface House {
+interface FeatureCard {
     id: string;
     title: string;
-    location: string;
-    price: number;
-    images: string[];
+    description: string;
+    image: any;
 }
+
+const features: FeatureCard[] = [
+    {
+        id: "1",
+        title: "Find Your Dream Home",
+        description:
+            "Browse thousands of listings with high-quality photos and virtual tours",
+        image: require("../../../assets/images/roberto unsplash.jpg"),
+    },
+    {
+        id: "2",
+        title: "Smart Search Filters",
+        description:
+            "Filter by price, location, amenities, and more to find exactly what you need",
+        image: require("../../../assets/images/unsplash.jpg"),
+    },
+    {
+        id: "3",
+        title: "Post Listings Easily",
+        description:
+            "List your property in minutes with our simple submission process",
+        image: require("../../../assets/images/brian-unsplash.jpg"),
+    },
+];
 
 const HomeScreen = () => {
     const navigation = useNavigation<NavigationProp>();
-    const [profile, setProfile] = useState<Profile | null>(null);
-    const [featuredHouses, setFeaturedHouses] = useState<House[]>([]);
-    const [loading, setLoading] = useState(true);
+    const flatListRef = useRef<FlatList>(null);
+    const [currentIndex, setCurrentIndex] = React.useState(0);
 
-    useEffect(() => {
-        const fetchData = async () => {
-            // Get the authenticated user
-            const {
-                data: { user },
-                error: authError,
-            } = await supabase.auth.getUser();
-            if (authError || !user) {
-                console.error("Error fetching user:", authError);
-                setLoading(false);
-                return;
-            }
+    const handleScroll = (event: any) => {
+        const contentOffsetX = event.nativeEvent.contentOffset.x;
+        const index = Math.round(contentOffsetX / (width * 0.8));
+        setCurrentIndex(index % features.length);
+    };
 
-            // Fetch the profile
-            const { data: profileData, error: profileError } = await supabase
-                .from("profiles")
-                .select("id, full_name, username")
-                .eq("id", user.id)
-                .single();
-
-            if (profileError) {
-                console.error("Error fetching profile:", profileError);
-            } else {
-                setProfile(profileData);
-            }
-
-            // Fetch featured houses (e.g., 3 most recent houses)
-            const { data: housesData, error: housesError } = await supabase
-                .from("houses")
-                .select("id, title, location, price, images")
-                .order("created_at", { ascending: false })
-                .limit(3);
-
-            if (housesError) {
-                console.error("Error fetching houses:", housesError);
-            } else {
-                setFeaturedHouses(housesData);
-            }
-
-            setLoading(false);
-        };
-
-        fetchData();
-    }, []);
-
-    const renderHouseItem = ({
-        item,
-        index,
-    }: {
-        item: House;
-        index: number;
-    }) => (
-        <Animated.View entering={FadeInDown.delay(index * 200).duration(600)}>
-            <TouchableOpacity
-                style={styles.houseCard}
-                onPress={() =>
-                    navigation.navigate("HouseDetail", { houseId: item.id })
-                }
-            >
-                <Image
-                    source={{ uri: item.images[0] }}
-                    style={styles.houseImage}
-                />
-                <View style={styles.houseInfo}>
-                    <Text style={styles.houseTitle}>{item.title}</Text>
-                    <Text style={styles.houseLocation}>{item.location}</Text>
-                    <Text style={styles.housePrice}>${item.price}/month</Text>
-                </View>
-            </TouchableOpacity>
-        </Animated.View>
-    );
-
-    if (loading) {
-        return (
-            <View style={styles.loading}>
-                <Text style={styles.loadingText}>Loading...</Text>
-            </View>
-        );
-    }
+    const handleSearchHouses = () => {
+        navigation.navigate("Houses");
+    };
+    const handlePostHouses = () => {
+        navigation.navigate("Account");
+    };
 
     return (
         <LinearGradient
-            colors={[Colors.primary, Colors.black]}
-            style={styles.background}
+            colors={[Colors.primary, Colors.secondary]}
+            style={styles.container}
         >
-            <View style={styles.container}>
-                <Animated.View
-                    entering={FadeInDown.duration(600)}
-                    style={styles.header}
-                >
-                    <Text style={styles.welcomeText}>
-                        Welcome, {profile?.full_name || "User"}!
-                    </Text>
-                    <Text style={styles.subText}>
-                        Find your perfect home today
-                    </Text>
-                </Animated.View>
+            <StatusBar barStyle="light-content" translucent />
 
-                <Animated.View entering={FadeInDown.delay(200).duration(600)}>
-                    <TouchableOpacity
-                        style={styles.searchButton}
-                        onPress={() => navigation.navigate("Houses")}
+            <Animated.View
+                entering={FadeInDown.duration(600)}
+                style={styles.header}
+            >
+                <Text style={styles.headerTitle}>Welcome to EasyRent</Text>
+                <Text style={styles.headerSubtitle}>
+                    Your journey to perfect housing starts here
+                </Text>
+            </Animated.View>
+
+            <FlatList
+                ref={flatListRef}
+                data={features}
+                horizontal
+                pagingEnabled
+                showsHorizontalScrollIndicator={false}
+                onScroll={handleScroll}
+                keyExtractor={(item) => item.id}
+                renderItem={({ item, index }) => (
+                    <Animated.View
+                        entering={index % 2 === 0 ? SlideInRight : SlideInLeft}
+                        style={styles.featureCard}
                     >
-                        <Text style={styles.searchButtonText}>
-                            Search Houses
-                        </Text>
-                    </TouchableOpacity>
-                </Animated.View>
+                        <Image
+                            source={item.image}
+                            style={styles.featureImage}
+                        />
+                        <LinearGradient
+                            colors={["transparent", "rgba(0,0,0,0.8)"]}
+                            style={styles.imageOverlay}
+                        />
+                        <View style={styles.featureContent}>
+                            <Text style={styles.featureTitle}>
+                                {item.title}
+                            </Text>
+                            <Text style={styles.featureDescription}>
+                                {item.description}
+                            </Text>
+                        </View>
+                    </Animated.View>
+                )}
+                contentContainerStyle={styles.carouselContainer}
+            />
 
-                <Text style={styles.sectionTitle}>Featured Houses</Text>
-                <FlatList
-                    data={featuredHouses}
-                    renderItem={renderHouseItem}
-                    keyExtractor={(item) => item.id}
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={styles.houseList}
-                />
+            <View style={styles.pagination}>
+                {features.map((_, index) => (
+                    <View
+                        key={index}
+                        style={[
+                            styles.dot,
+                            currentIndex === index && styles.activeDot,
+                        ]}
+                    />
+                ))}
             </View>
+
+            <Animated.View
+                entering={SlideInRight.delay(300)}
+                style={styles.buttonContainer}
+            >
+                <TouchableOpacity
+                    style={styles.primaryButton}
+                    onPress={handleSearchHouses}
+                >
+                    <Text style={styles.buttonText}>Start Searching</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    style={styles.secondaryButton}
+                    onPress={handlePostHouses}
+                >
+                    <Text style={styles.buttonText}>List Your Property</Text>
+                </TouchableOpacity>
+            </Animated.View>
         </LinearGradient>
     );
 };
 
+const { width, height } = Dimensions.get("window");
+
 const styles = StyleSheet.create({
-    background: {
-        flex: 1,
-    },
     container: {
         flex: 1,
-        paddingTop: 60,
-        paddingHorizontal: 20,
+        paddingTop: StatusBar.currentHeight || 40,
     },
     header: {
+        padding: 20,
         alignItems: "center",
-        marginBottom: 30,
+        marginBottom: 20,
     },
-    welcomeText: {
+    headerTitle: {
         fontSize: 32,
-        fontWeight: "bold",
+        fontWeight: "800",
         color: Colors.white,
         textAlign: "center",
+        textShadowColor: "rgba(0,0,0,0.2)",
+        textShadowOffset: { width: 1, height: 1 },
+        textShadowRadius: 5,
     },
-    subText: {
+    headerSubtitle: {
         fontSize: 18,
-        color: Colors.grayLight,
+        color: Colors.white,
         marginTop: 10,
         textAlign: "center",
     },
-    searchButton: {
-        backgroundColor: Colors.secondary,
-        paddingVertical: 15,
-        borderRadius: 10,
-        alignItems: "center",
-        marginBottom: 30,
+    carouselContainer: {
+        paddingHorizontal: 20,
     },
-    searchButtonText: {
-        fontSize: 18,
-        fontWeight: "bold",
-        color: Colors.white,
-    },
-    sectionTitle: {
-        fontSize: 22,
-        fontWeight: "bold",
-        color: Colors.white,
-        marginBottom: 15,
-    },
-    houseList: {
-        paddingBottom: 20,
-    },
-    houseCard: {
-        width: width * 0.7,
-        backgroundColor: Colors.glassBackground,
-        borderRadius: 15,
-        marginRight: 15,
+    featureCard: {
+        width: width * 0.8,
+        height: height * 0.5,
+        borderRadius: 25,
+        marginHorizontal: 10,
         overflow: "hidden",
-        borderWidth: 1,
-        borderColor: Colors.glassBorder,
+        backgroundColor: Colors.white,
+        elevation: 10,
+        shadowColor: Colors.black,
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.3,
+        shadowRadius: 20,
     },
-    houseImage: {
+    featureImage: {
         width: "100%",
-        height: 150,
-        borderTopLeftRadius: 15,
-        borderTopRightRadius: 15,
+        height: "100%",
+        position: "absolute",
     },
-    houseInfo: {
-        padding: 15,
+    imageOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        justifyContent: "flex-end",
     },
-    houseTitle: {
-        fontSize: 18,
-        fontWeight: "bold",
+    featureContent: {
+        padding: 25,
+        position: "absolute",
+        bottom: 0,
+        left: 0,
+        right: 0,
+    },
+    featureTitle: {
+        fontSize: 24,
+        fontWeight: "700",
         color: Colors.white,
+        marginBottom: 10,
     },
-    houseLocation: {
-        fontSize: 14,
-        color: Colors.grayDark,
-        marginVertical: 5,
-    },
-    housePrice: {
+    featureDescription: {
         fontSize: 16,
-        fontWeight: "bold",
-        color: Colors.secondary,
-    },
-    loading: {
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-        backgroundColor: Colors.black,
-    },
-    loadingText: {
-        fontSize: 18,
         color: Colors.white,
+        lineHeight: 22,
+    },
+    pagination: {
+        flexDirection: "row",
+        justifyContent: "center",
+        marginVertical: 20,
+    },
+    dot: {
+        width: 10,
+        height: 10,
+        borderRadius: 5,
+        backgroundColor: "rgba(255,255,255,0.4)",
+        marginHorizontal: 5,
+    },
+    activeDot: {
+        backgroundColor: Colors.white,
+        width: 25,
+    },
+    buttonContainer: {
+        paddingHorizontal: 30,
+        marginBottom: 40,
+    },
+    primaryButton: {
+        backgroundColor: Colors.white,
+        padding: 18,
+        borderRadius: 15,
+        alignItems: "center",
+        marginBottom: 15,
+        elevation: 5,
+    },
+    secondaryButton: {
+        backgroundColor: "transparent",
+        borderWidth: 2,
+        borderColor: Colors.white,
+        padding: 18,
+        borderRadius: 15,
+        alignItems: "center",
+    },
+    buttonText: {
+        fontSize: 18,
+        fontWeight: "700",
+        color: Colors.primary,
     },
 });
 
