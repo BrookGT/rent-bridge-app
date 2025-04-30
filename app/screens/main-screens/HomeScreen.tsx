@@ -1,5 +1,5 @@
 // screens/main-screens/HomeScreen.tsx
-import React, { useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
     View,
     Text,
@@ -19,6 +19,8 @@ import Colors from "../../../components/constants/Colors";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { LinearGradient } from "expo-linear-gradient";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { supabase } from "@/utils/supabase";
 
 type RootStackParamList = {
     Houses: undefined;
@@ -61,12 +63,67 @@ const features: FeatureCard[] = [
 const HomeScreen = () => {
     const navigation = useNavigation<NavigationProp>();
     const flatListRef = useRef<FlatList>(null);
-    const [currentIndex, setCurrentIndex] = React.useState(0);
+    const [currentIndex, setCurrentIndex] = useState(0);
+    const [userName, setUserName] = useState<string | null>(null);
+    const insets = useSafeAreaInsets();
+
+    useEffect(() => {
+        const fetchUserProfile = async () => {
+            try {
+                const {
+                    data: { user },
+                    error: userError,
+                } = await supabase.auth.getUser();
+
+                if (userError) {
+                    console.error("Error fetching user:", userError);
+                    return;
+                }
+
+                if (user) {
+                    const { data: profile, error: profileError } =
+                        await supabase
+                            .from("profiles")
+                            .select("full_name")
+                            .eq("id", user.id)
+                            .single();
+
+                    if (profileError) {
+                        console.error("Error fetching profile:", profileError);
+                    } else if (profile?.full_name) {
+                        console.log("Fetched full_name:", profile.full_name);
+                        setUserName(profile.full_name); // Set the user's name
+                    } else {
+                        console.warn("No full_name found for user.");
+                    }
+                }
+            } catch (error) {
+                console.error("Unexpected error fetching user profile:", error);
+            }
+        };
+
+        fetchUserProfile();
+    }, []);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            const newIndex = (currentIndex + 1) % features.length;
+            setCurrentIndex(newIndex);
+            flatListRef.current?.scrollToIndex({
+                index: newIndex,
+                animated: true,
+            });
+        }, 5000); // Change slide every 5 seconds
+
+        return () => clearInterval(interval);
+    }, [currentIndex]);
 
     const handleScroll = (event: any) => {
         const contentOffsetX = event.nativeEvent.contentOffset.x;
         const index = Math.round(contentOffsetX / (width * 0.8));
-        setCurrentIndex(index % features.length);
+        if (index !== currentIndex) {
+            setCurrentIndex(index % features.length);
+        }
     };
 
     const handleSearchHouses = () => {
@@ -81,13 +138,19 @@ const HomeScreen = () => {
             colors={[Colors.primary, Colors.secondary]}
             style={styles.container}
         >
-            <StatusBar barStyle="light-content" translucent />
+            <StatusBar
+                barStyle="light-content"
+                backgroundColor={Colors.homeScreenBackground}
+                translucent
+            />
 
             <Animated.View
                 entering={FadeInDown.duration(600)}
                 style={styles.header}
             >
-                <Text style={styles.headerTitle}>Welcome to EasyRent</Text>
+                <Text style={styles.headerTitle}>
+                    Welcome, {userName || "User"}!
+                </Text>
                 <Text style={styles.headerSubtitle}>
                     Your journey to perfect housing starts here
                 </Text>
@@ -125,6 +188,11 @@ const HomeScreen = () => {
                     </Animated.View>
                 )}
                 contentContainerStyle={styles.carouselContainer}
+                getItemLayout={(data, index) => ({
+                    length: width * 0.8,
+                    offset: width * 0.8 * index,
+                    index,
+                })}
             />
 
             <View style={styles.pagination}>
@@ -141,7 +209,10 @@ const HomeScreen = () => {
 
             <Animated.View
                 entering={SlideInRight.delay(300)}
-                style={styles.buttonContainer}
+                style={[
+                    styles.buttonContainer,
+                    { marginBottom: 20 + insets.bottom },
+                ]}
             >
                 <TouchableOpacity
                     style={styles.primaryButton}
@@ -193,7 +264,7 @@ const styles = StyleSheet.create({
     },
     featureCard: {
         width: width * 0.8,
-        height: height * 0.5,
+        height: height * 0.433,
         borderRadius: 25,
         marginHorizontal: 10,
         overflow: "hidden",
@@ -208,6 +279,7 @@ const styles = StyleSheet.create({
         width: "100%",
         height: "100%",
         position: "absolute",
+        borderRadius: 25,
     },
     imageOverlay: {
         ...StyleSheet.absoluteFillObject,
@@ -244,12 +316,14 @@ const styles = StyleSheet.create({
         marginHorizontal: 5,
     },
     activeDot: {
+        width: 10,
+        height: 10,
+        borderRadius: 5,
         backgroundColor: Colors.white,
-        width: 25,
+        marginHorizontal: 5,
     },
     buttonContainer: {
         paddingHorizontal: 30,
-        marginBottom: 40,
     },
     primaryButton: {
         backgroundColor: Colors.white,

@@ -136,7 +136,7 @@ import { ViewStyle } from "react-native";
 const styles = {
     iconContainer: {
         width: 40,
-        height: 40,
+        height: 35,
         borderRadius: 20,
         backgroundColor: Colors.white,
         justifyContent: "center" as ViewStyle["justifyContent"],
@@ -151,7 +151,6 @@ const styles = {
         borderWidth: 2,
         borderColor: Colors.tealDark,
         backgroundColor: Colors.tealDark,
-        marginBottom: 5,
     },
 };
 
